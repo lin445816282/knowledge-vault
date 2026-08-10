@@ -1,0 +1,28 @@
+# Dependencies
+target/
+*.jar
+*.war
+*.class
+*.log
+*.tmp
+
+# IDE
+.idea/
+.vscode/
+*.iml
+.project
+.classpath
+.settings/
+
+# Database
+data/
+*.mv.db
+*.trace.db
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+*.env.local
