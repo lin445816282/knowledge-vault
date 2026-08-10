@@ -4,6 +4,7 @@ import com.kv.common.constant.KnowledgeStatus;
 import com.kv.common.dto.PageRequest;
 import com.kv.common.dto.PageResponse;
 import com.kv.common.exception.BusinessException;
+import com.kv.common.util.AesUtil;
 import com.kv.core.entity.Knowledge;
 import com.kv.core.repository.KnowledgeRepository;
 import jakarta.transaction.Transactional;
@@ -63,6 +64,8 @@ public class KnowledgeService {
             }
         }
 
+        knowledge.setContentEncrypted(decryptContent(knowledge.getContentEncrypted()));
+
         return knowledge;
     }
 
@@ -81,6 +84,8 @@ public class KnowledgeService {
         if (entity.getCollectCount() == null) {
             entity.setCollectCount(0L);
         }
+
+        entity.setContentEncrypted(encryptContent(entity.getContentEncrypted()));
 
         Knowledge saved = knowledgeRepository.save(entity);
         log.info("知识创建成功: id={}, userId={}, title={}", saved.getId(), userId, saved.getTitle());
@@ -209,5 +214,20 @@ public class KnowledgeService {
                 .orElseThrow(() -> new BusinessException(404, "知识不存在"));
         knowledge.setViewCount(knowledge.getViewCount() + 1);
         knowledgeRepository.save(knowledge);
+    }
+
+    // ──────────────────────────────────────────────
+    // AES 加密/解密
+    // ──────────────────────────────────────────────
+
+    private String encryptContent(String plainContent) {
+        String aesKey = AesUtil.generateKey();
+        return aesKey + ":" + AesUtil.encrypt(plainContent, aesKey);
+    }
+
+    private String decryptContent(String encryptedContent) {
+        if (encryptedContent == null || !encryptedContent.contains(":")) return encryptedContent;
+        String[] parts = encryptedContent.split(":", 2);
+        return AesUtil.decrypt(parts[1], parts[0]);
     }
 }

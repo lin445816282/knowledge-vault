@@ -1,6 +1,8 @@
 package com.kv.core.repository;
 
 import com.kv.core.entity.ShareLog;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -13,4 +15,8 @@ public interface ShareLogRepository extends JpaRepository<ShareLog, Long> {
     Optional<ShareLog> findByShareToken(String shareToken);
 
     List<ShareLog> findBySharerId(Long sharerId);
+
+    Page<ShareLog> findBySharerId(Long sharerId, Pageable pageable);
+
+    List<ShareLog> findByKnowledgeIdAndAccessedAtIsNotNull(Long knowledgeId);
 }
