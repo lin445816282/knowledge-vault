@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 public class KnowledgeService {
 
     private final KnowledgeRepository knowledgeRepository;
+    private final KnowledgeVersionService knowledgeVersionService;
 
     // ──────────────────────────────────────────────
     // 辅助方法
@@ -147,6 +148,10 @@ public class KnowledgeService {
         }
 
         Knowledge updated = knowledgeRepository.save(knowledge);
+
+        // 创建版本快照
+        knowledgeVersionService.createVersion(id, currentUserId, "更新知识内容");
+
         log.info("知识更新成功: id={}", id);
         return updated;
     }
