@@ -4,11 +4,18 @@ import com.kv.common.dto.ApiResponse;
 import com.kv.common.dto.PageRequest;
 import com.kv.common.dto.PageResponse;
 import com.kv.core.entity.Knowledge;
+import com.kv.core.entity.Order;
+import com.kv.core.repository.OrderRepository;
 import com.kv.core.service.KnowledgeService;
+import com.kv.core.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
+import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -17,6 +24,8 @@ import org.springframework.web.bind.annotation.*;
 public class KnowledgeController {
 
     private final KnowledgeService knowledgeService;
+    private final OrderService orderService;
+    private final OrderRepository orderRepository;
 
     // ──────────────────────────────────────────────
     // 辅助方法
@@ -43,7 +52,17 @@ public class KnowledgeController {
     @GetMapping("/{id}")
     public ApiResponse<Knowledge> getById(@PathVariable Long id) {
         log.info("GET /api/v1/knowledge/{}", id);
-        return ApiResponse.ok(knowledgeService.getById(id));
+        Knowledge knowledge = knowledgeService.getById(id);
+        // 如果知识有售价且当前用户未购买，只返回摘要，不返回完整内容
+        if (knowledge.getPrice() != null && knowledge.getPrice().compareTo(BigDecimal.ZERO) > 0) {
+            Long userId = getCurrentUserId();
+            Optional<Order> orderOpt = orderRepository.findByKnowledgeIdAndBuyerIdAndStatus(id, userId, "PAID");
+            if (orderOpt.isEmpty()) {
+                // 用户未购买 —— 屏蔽完整内容，仅保留摘要
+                knowledge.setContentEncrypted(null);
+            }
+        }
+        return ApiResponse.ok(knowledge);
     }
 
     @PostMapping
@@ -96,5 +115,16 @@ public class KnowledgeController {
         log.info("POST /api/v1/knowledge/{}/view", id);
         knowledgeService.incrementViewCount(id);
         return ApiResponse.ok();
+    }
+
+    /**
+     * 购买知识 — 创建订单并完成付款。
+     */
+    @PostMapping("/{id}/purchase")
+    public ApiResponse<?> purchase(@PathVariable Long id) {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Order order = orderService.createOrder(userId, id);
+        order = orderService.payOrder(order.getId(), userId);
+        return ApiResponse.ok(Map.of("orderId", order.getId(), "status", order.getStatus()));
     }
 }
