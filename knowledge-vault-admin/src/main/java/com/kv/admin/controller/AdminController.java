@@ -1,10 +1,16 @@
 package com.kv.admin.controller;
 
+import com.kv.admin.service.AdminService;
 import com.kv.common.dto.ApiResponse;
+import com.kv.common.dto.PageRequest;
+import com.kv.common.dto.PageResponse;
+import com.kv.core.entity.Blacklist;
+import com.kv.core.entity.Knowledge;
+import com.kv.core.entity.User;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -13,30 +19,44 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/admin")
+@RequiredArgsConstructor
 public class AdminController {
+
+    private final AdminService adminService;
 
     @GetMapping("/dashboard")
     public ApiResponse<Map<String, Object>> dashboard() {
-        return ApiResponse.ok(Map.of(
-            "totalUsers", 0,
-            "totalKnowledge", 0,
-            "totalOrders", 0,
-            "todayAccess", 0
-        ));
+        return ApiResponse.ok(adminService.getDashboard());
     }
 
     @GetMapping("/users")
-    public ApiResponse<List<?>> users() {
-        return ApiResponse.ok(List.of());
+    public ApiResponse<PageResponse<User>> users(@ModelAttribute PageRequest pageRequest) {
+        return ApiResponse.ok(adminService.listUsers(pageRequest));
     }
 
-    @GetMapping("/logs")
-    public ApiResponse<List<?>> logs() {
-        return ApiResponse.ok(List.of());
+    @PutMapping("/users/{id}/freeze")
+    public ApiResponse<User> toggleFreeze(@PathVariable Long id) {
+        return ApiResponse.ok(adminService.toggleUserFreeze(id));
+    }
+
+    @GetMapping("/knowledge")
+    public ApiResponse<PageResponse<Knowledge>> knowledge(@ModelAttribute PageRequest pageRequest) {
+        return ApiResponse.ok(adminService.listKnowledge(pageRequest));
+    }
+
+    @DeleteMapping("/knowledge/{id}")
+    public ApiResponse<Void> removeKnowledge(@PathVariable Long id) {
+        adminService.removeKnowledge(id);
+        return ApiResponse.ok();
+    }
+
+    @GetMapping("/logs/stats")
+    public ApiResponse<Map<String, Long>> accessStats() {
+        return ApiResponse.ok(adminService.getAccessStats());
     }
 
     @GetMapping("/blacklist")
-    public ApiResponse<List<?>> blacklist() {
-        return ApiResponse.ok(List.of());
+    public ApiResponse<PageResponse<Blacklist>> blacklist(@ModelAttribute PageRequest pageRequest) {
+        return ApiResponse.ok(adminService.getBlacklist(pageRequest));
     }
 }

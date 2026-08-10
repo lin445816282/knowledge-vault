@@ -2,13 +2,12 @@ package com.kv.core.controller;
 
 import com.kv.common.dto.ApiResponse;
 import com.kv.common.dto.PageRequest;
-import com.kv.core.entity.SystemConfig;
 import com.kv.core.service.SystemConfigService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -19,33 +18,21 @@ public class SystemConfigController {
     private final SystemConfigService systemConfigService;
 
     @GetMapping
-    public ApiResponse<List<SystemConfig>> list(PageRequest pageRequest) {
-        log.info("GET /api/v1/system/configs - list system configs, page={}, size={}", pageRequest.getPage(), pageRequest.getSize());
-        return ApiResponse.ok(systemConfigService.list(pageRequest));
+    public ApiResponse<?> listAll(PageRequest pageRequest) {
+        log.info("GET /api/v1/system/configs");
+        return ApiResponse.ok(systemConfigService.listAll(pageRequest));
     }
 
-    @GetMapping("/{id}")
-    public ApiResponse<SystemConfig> getById(@PathVariable Long id) {
-        log.info("GET /api/v1/system/configs/{}", id);
-        return ApiResponse.ok(systemConfigService.getById(id));
+    @GetMapping("/{key}")
+    public ApiResponse<String> get(@PathVariable String key) {
+        log.info("GET /api/v1/system/configs/{}", key);
+        return ApiResponse.ok(systemConfigService.get(key));
     }
 
-    @PostMapping
-    public ApiResponse<SystemConfig> create(@RequestBody SystemConfig config) {
-        log.info("POST /api/v1/system/configs - create system config");
-        return ApiResponse.ok(systemConfigService.create(config));
-    }
-
-    @PutMapping("/{id}")
-    public ApiResponse<SystemConfig> update(@PathVariable Long id, @RequestBody SystemConfig config) {
-        log.info("PUT /api/v1/system/configs/{} - update system config", id);
-        return ApiResponse.ok(systemConfigService.update(id, config));
-    }
-
-    @DeleteMapping("/{id}")
-    public ApiResponse<Void> delete(@PathVariable Long id) {
-        log.info("DELETE /api/v1/system/configs/{}", id);
-        systemConfigService.delete(id);
+    @PutMapping("/{key}")
+    public ApiResponse<?> set(@PathVariable String key, @RequestBody Map<String, String> body) {
+        log.info("PUT /api/v1/system/configs/{}", key);
+        systemConfigService.set(key, body.get("value"), body.getOrDefault("description", ""));
         return ApiResponse.ok();
     }
 }
