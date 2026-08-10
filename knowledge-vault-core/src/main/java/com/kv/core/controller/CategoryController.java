@@ -2,6 +2,7 @@ package com.kv.core.controller;
 
 import com.kv.common.dto.ApiResponse;
 import com.kv.common.dto.PageRequest;
+import com.kv.common.dto.PageResponse;
 import com.kv.core.entity.Category;
 import com.kv.core.service.CategoryService;
 import lombok.RequiredArgsConstructor;
@@ -19,9 +20,15 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @GetMapping
-    public ApiResponse<List<Category>> list(PageRequest pageRequest) {
+    public ApiResponse<PageResponse<Category>> list(PageRequest pageRequest) {
         log.info("GET /api/v1/categories - list categories, page={}, size={}", pageRequest.getPage(), pageRequest.getSize());
         return ApiResponse.ok(categoryService.list(pageRequest));
+    }
+
+    @GetMapping("/tree")
+    public ApiResponse<List<CategoryService.TreeNode>> tree() {
+        log.info("GET /api/v1/categories/tree");
+        return ApiResponse.ok(categoryService.getTree());
     }
 
     @GetMapping("/{id}")

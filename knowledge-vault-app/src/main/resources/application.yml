@@ -27,6 +27,9 @@ spring:
       ddl-auto: update
     show-sql: false
     open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
 
 ---
 # ===== PROD: MySQL 8.0 =====
